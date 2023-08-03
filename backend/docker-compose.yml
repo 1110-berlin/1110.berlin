@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  web:
+    image: python:latest
+    container_name: api_1110_web
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - ./api_1110:/app
+    working_dir: /app
+    env_file:
+      - .env 
+    environment:
+      - DJANGO_SETTINGS_MODULE=api_1110.settings
+      - PRODUCTION=${PRODUCTION}
+    command: >
+      bash -c "pip install --upgrade pip &&
+               pip install -r /app/requirements.txt && 
+               python /app/manage.py migrate && 
+               python /app/manage.py collectstatic --noinput && 
+               python manage.py createfreshadmin &&
+               gunicorn api_1110.wsgi:application -b 0.0.0.0:8000"
+  
+  celery-worker:
+    image: python:latest
+    container_name: api_1110_celery_worker
+    depends_on:
+      - db
+      - redis
+      - web
+    volumes:
+      - ./api_1110:/app
+    working_dir: /app
+    env_file:
+      - .env 
+    environment:
+      - DJANGO_SETTINGS_MODULE=api_1110.settings
+      - PRODUCTION=${PRODUCTION}
+    command: >
+      bash -c "pip install --upgrade pip &&
+               pip install -r /app/requirements.txt && 
+               celery -A api_1110 worker --loglevel=info"
+
+
+  db:
+    image: postgres:latest
+    container_name: api_1110_db
+    volumes:
+      - api_1110_db_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+
+  redis:
+    image: redis:latest
+    container_name: api_1110_redis
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  nginx:
+    image: nginx:alpine
+    container_name: api_1110_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./api_1110:/app
+      - ./nginx:/etc/nginx/conf.d
+      - certbot-etc:/etc/letsencrypt
+    depends_on:
+      - web
+    command: >
+      sh -c "if [ ! -z \"$PRODUCTION\" ]; then
+              certbot --nginx -d yourdomain.com --non-interactive --agree-tos -m your@email.com;
+            fi;
+            nginx -g 'daemon off;'"
+
+networks:
+  default:
+    external:
+      name: nginx-proxy
+
+volumes:
+  api_1110_db_data:
+  certbot-etc:
