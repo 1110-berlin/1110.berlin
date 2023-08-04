@@ -3,6 +3,8 @@ node_modules/
 public
 *.env*
 
+profile_pics/
+
 # Logs
 logs
 *.log

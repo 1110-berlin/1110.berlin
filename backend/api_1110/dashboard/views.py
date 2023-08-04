@@ -6,6 +6,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.reverse import reverse
 
+from django.http import HttpResponse
+from .tasks import add_numbers
+
 
 class CustomAPIRootView(APIView):
     def get(self, request):
@@ -37,10 +40,6 @@ class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
     permission_classes = [permissions.IsAuthenticated]
-
-
-from django.http import HttpResponse
-from .tasks import add_numbers
 
 
 def my_view(request):

@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  gatsby-build-optimize-analyze:
+    image: node:alpine
+    container_name: gatsby-builder
+    volumes:
+      - ./frontend:/app
+    working_dir: /app
+    environment:
+      - NODE_ENV=production
+    command: >
+      sh -c "npm install &&
+             npm run build &&
+             npm install -g gatsby@latest &&
+             npm install -g gatsby-plugin-optimize &&
+             npm run gatsby-plugin-optimize &&
+             npm install -g eslint eslint-plugin-react eslint-plugin-import &&
+             eslint . --fix &&
+             npm install -g imagemin imagemin-cli html-minifier purgecss &&
+             imagemin src/images/* --out-dir=public/images &&
+             html-minifier --input-dir=public --output-dir=public --file-ext html &&
+             purgecss --css src/styles/*.css --content public/**/*.html --output src/styles"
