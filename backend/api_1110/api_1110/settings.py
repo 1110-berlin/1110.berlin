@@ -43,7 +43,7 @@ else:
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f'redis://:{config("REDIS_PASSWORD")}@redis:6379/1',  # Use your Redis password
+        "LOCATION": f'redis://:{config("REDIS_PASSWORD")}@api_1110_redis:6379/99',  # Use your Redis password
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         },
@@ -51,12 +51,12 @@ CACHES = {
 }
 
 # Configure Celery
-CELERY_BROKER_URL = f'redis://:{config("REDIS_PASSWORD")}@redis:6379/0'
-CELERY_RESULT_BACKEND = f'redis://:{config("REDIS_PASSWORD")}@redis:6379/0'
-CELERY_ACCEPT_CONTENT = ["json"]
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "UTC"
+CELERY_BROKER_URL = f'redis://:{config("REDIS_PASSWORD")}@api_1110_redis:6379/1'
+CELERY_RESULT_BACKEND = f'redis://:{config("REDIS_PASSWORD")}@api_1110_redis:6379/2'
+# CELERY_ACCEPT_CONTENT = ["json"]
+# CELERY_TASK_SERIALIZER = "json"
+# CELERY_RESULT_SERIALIZER = "json"
+# CELERY_TIMEZONE = "UTC"
 
 # Application definition
 CSRF_TRUSTED_ORIGINS = ["http://localhost"]

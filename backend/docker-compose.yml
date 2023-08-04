@@ -9,6 +9,9 @@ services:
       - redis
     volumes:
       - ./api_1110:/app
+    networks:
+      - tasks
+      - default
     working_dir: /app
     env_file:
       - .env 
@@ -22,7 +25,7 @@ services:
                python /app/manage.py collectstatic --noinput && 
                python manage.py createfreshadmin &&
                gunicorn api_1110.wsgi:application -b 0.0.0.0:8000"
-  
+
   celery-worker:
     image: python:latest
     container_name: api_1110_celery_worker
@@ -32,6 +35,9 @@ services:
       - web
     volumes:
       - ./api_1110:/app
+    networks:
+      - tasks
+      - default
     working_dir: /app
     env_file:
       - .env 
@@ -43,12 +49,14 @@ services:
                pip install -r /app/requirements.txt && 
                celery -A api_1110 worker --loglevel=info"
 
-
   db:
     image: postgres:latest
     container_name: api_1110_db
     volumes:
       - api_1110_db_data:/var/lib/postgresql/data
+    networks:
+      - tasks
+      - default
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -57,8 +65,12 @@ services:
   redis:
     image: redis:latest
     container_name: api_1110_redis
+    networks:
+      - tasks
+      - default
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
 
   nginx:
     image: nginx:alpine
@@ -70,6 +82,9 @@ services:
       - ./api_1110:/app
       - ./nginx:/etc/nginx/conf.d
       - certbot-etc:/etc/letsencrypt
+    networks:
+      - tasks
+      - default
     depends_on:
       - web
     command: >
@@ -79,6 +94,7 @@ services:
             nginx -g 'daemon off;'"
 
 networks:
+  tasks:
   default:
     external:
       name: nginx-proxy

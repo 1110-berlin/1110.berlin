@@ -39,8 +39,10 @@ class GroupViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-from .tasks import process_data
+from django.http import HttpResponse
+from .tasks import add_numbers
 
 
-def some_view(request):
-    process_data.delay(data)
+def my_view(request):
+    result = add_numbers.delay(3, 5)
+    return HttpResponse(f"Task added! Task ID: {result.task_id}")
